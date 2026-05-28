@@ -188,7 +188,7 @@ export default function SubmitInquiryPage() {
           <p className="mb-4 text-xs font-medium uppercase tracking-wider text-zinc-500">
             Selected work
           </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {PORTFOLIO_ITEMS.map((item) => (
               <PortfolioCard key={item.id} item={item} />
             ))}
