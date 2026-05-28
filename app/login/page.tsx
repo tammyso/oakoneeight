@@ -1,16 +1,39 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(
+    searchParams.get("error") === "invalid_recovery_link"
+      ? "That recovery link has expired. Use Forgot password below to get a new one."
+      : "",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setErrorMessage("Enter your email address above, then click Forgot password.");
+      return;
+    }
+    setIsSendingReset(true);
+    setErrorMessage("");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
+    });
+    // Always show success — avoids leaking whether the email exists.
+    setResetSent(true);
+    setIsSendingReset(false);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -84,6 +107,21 @@ export default function LoginPage() {
           >
             {isSubmitting ? "Signing in..." : "Sign in"}
           </button>
+
+          {resetSent ? (
+            <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              Recovery email sent. Check your inbox and click the link.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={isSendingReset}
+              className="w-full text-center text-xs text-zinc-400 hover:text-zinc-700 disabled:opacity-50"
+            >
+              {isSendingReset ? "Sending..." : "Forgot password?"}
+            </button>
+          )}
         </form>
       </div>
     </main>
