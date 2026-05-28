@@ -7,7 +7,7 @@ import { KENNY_PROFILE } from "@/lib/profile";
 import { MailIcon, SocialIcon } from "./social-icon";
 
 const NAV_LINKS = [
-  { href: "/submit", label: "Work + contact" },
+  { href: "/submit", label: "Home" },
   { href: "/packages", label: "Packages" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },

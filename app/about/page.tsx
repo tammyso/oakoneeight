@@ -9,31 +9,31 @@ export const metadata: Metadata = {
 };
 
 const BIO_PARAGRAPHS = [
-  "I'm Kenny, a New York wedding filmmaker and videographer. I specialize in cinematic wedding videography, focusing on authentic moments, natural pacing, and storytelling that feels timeless rather than trendy.",
-  "Weddings don't unfold in predictable blocks of time. They move. They breathe. They shift emotionally. My work is built around capturing the day as a complete story. Every collection is structured to preserve natural pacing, authentic reactions, and the atmosphere that makes your wedding feel uniquely yours.",
-  "I believe clarity before the wedding day creates freedom during it. Professional planning, clear coverage boundaries, and consistent delivery timelines mean you can be present on the day instead of managing logistics.",
+  "I'm Kenny, a New York filmmaker. I shoot weddings, engagements, milestone events, brand work, and music videos. Videography is my primary focus. When photography is part of the picture, it's built around the film.",
+  "Weddings don't unfold in predictable blocks of time. They move. They breathe. They shift emotionally. My work is built around capturing the day as a complete story. Not staged moments or rushed timelines. Just intentional storytelling.",
+  "I work with a small number of clients at a time so every project gets real attention. If the work resonates with you, I'd love to hear about your day.",
 ];
 
 const SHOOTS = [
   {
     label: "Wedding films",
     blurb:
-      "Cinematic coverage structured around complete story arcs. Three collections available: Essential, Signature, and Legacy. Focused ceremony or reception coverage also available.",
+      "Cinematic coverage built around natural pacing and authentic reactions. Three collections: Essential, Signature, and Legacy. Focused ceremony or reception coverage also available.",
+  },
+  {
+    label: "Engagements and events",
+    blurb:
+      "Milestone shoots, birthday films, prom reels, and celebrations. Structured to capture the energy of the day without disrupting it.",
   },
   {
     label: "Brand work",
     blurb:
-      "Recurring social cuts, hero campaigns, founder stories. Built for brands that want video as a consistent part of their voice, not a one-time launch.",
+      "Recurring social content, hero campaigns, founder stories. For brands that want video as a consistent part of their voice.",
   },
   {
     label: "Music videos",
     blurb:
-      "From single-shot performance pieces to narrative cuts. Independent artists, small labels, solo projects.",
-  },
-  {
-    label: "Events",
-    blurb:
-      "Milestone celebrations, conferences, brand activations. Cinematic recap reels that capture the energy and atmosphere of the day.",
+      "Single-shot performance pieces to full narrative cuts. Independent artists, small labels, solo projects.",
   },
 ];
 
