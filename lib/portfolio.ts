@@ -12,6 +12,7 @@ export type PortfolioItem = {
   id: string;
   title: string;
   subtitle: string;
+  category: string;    // short label shown under the reel (e.g. "Wedding", "Birthday shoot")
   posterUrl: string;
   videoUrl?: string;   // YouTube / Vimeo embed
   videoPath?: string;  // direct video file (local path or Supabase Storage URL)
@@ -24,6 +25,7 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     id: "engagement",
     title: "Engagement film",
     subtitle: "Jenell & Emanuel",
+    category: "Engagement shoot",
     posterUrl: "",
     videoPath: `${SUPABASE_PORTFOLIO}/jenell-emanuel-engagement.mp4`,
   },
@@ -31,6 +33,7 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     id: "pre-wedding",
     title: "Pre-wedding reel",
     subtitle: "J & E",
+    category: "Wedding",
     posterUrl: "",
     videoPath: `${SUPABASE_PORTFOLIO}/je-pre-wedding-reel.mp4`,
   },
@@ -38,6 +41,7 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     id: "prom",
     title: "Prom reel",
     subtitle: "Jaylnn — 2025",
+    category: "Prom",
     posterUrl: "",
     videoPath: `${SUPABASE_PORTFOLIO}/jaylnn-prom-2025.mp4`,
   },
@@ -45,6 +49,7 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     id: "bday-saint",
     title: "Birthday reel",
     subtitle: "Saint",
+    category: "Birthday shoot",
     posterUrl: "",
     videoPath: `${SUPABASE_PORTFOLIO}/Saint%20Bday%20Reel.mp4`,
   },
@@ -52,6 +57,7 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     id: "bday-niecey",
     title: "Birthday film",
     subtitle: "Niecey — Feeling Good 37",
+    category: "Birthday shoot",
     posterUrl: "",
     videoPath: `${SUPABASE_PORTFOLIO}/niecey-37-bday.mp4`,
   },

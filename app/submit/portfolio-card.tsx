@@ -114,6 +114,10 @@ export default function PortfolioCard({ item }: { item: PortfolioItem }) {
         )}
       </div>
 
+      {/* Category label */}
+      <figcaption className="px-3 py-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{item.category}</p>
+      </figcaption>
     </figure>
   );
 }
