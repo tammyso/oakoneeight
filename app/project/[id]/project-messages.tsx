@@ -13,9 +13,11 @@ type Message = {
 export default function ProjectMessages({
   inquiryId,
   messages: initialMessages,
+  dark = false,
 }: {
   inquiryId: string;
   messages: Message[];
+  dark?: boolean;
 }) {
   const [name, setName] = useState("");
   const [text, setText] = useState("");
@@ -37,9 +39,13 @@ export default function ProjectMessages({
     });
   };
 
+  const inputClass = dark
+    ? "w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-600"
+    : "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300";
+
   return (
     <section className="mt-12">
-      <p className="mb-4 text-xs font-medium uppercase tracking-wider text-zinc-500">
+      <p className={`mb-4 text-xs font-medium uppercase tracking-wider ${dark ? "text-zinc-500" : "text-zinc-500"}`}>
         Messages
       </p>
 
@@ -48,13 +54,13 @@ export default function ProjectMessages({
           {initialMessages.map((msg) => (
             <li
               key={msg.id}
-              className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
+              className={`rounded-xl border p-4 ${dark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white shadow-sm"}`}
             >
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium text-zinc-900">
+                <p className={`text-sm font-medium ${dark ? "text-zinc-100" : "text-zinc-900"}`}>
                   {msg.sender_name}
                 </p>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-zinc-500">
                   {new Date(msg.created_at).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -63,25 +69,25 @@ export default function ProjectMessages({
                   })}
                 </p>
               </div>
-              <p className="mt-1 text-sm text-zinc-700">{msg.message}</p>
+              <p className={`mt-1 text-sm ${dark ? "text-zinc-400" : "text-zinc-700"}`}>{msg.message}</p>
             </li>
           ))}
         </ol>
       )}
 
       {sent ? (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+        <p className={`rounded-xl border p-4 text-sm ${dark ? "border-emerald-800/50 bg-emerald-950/30 text-emerald-300" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
           Message sent. Kenny will be in touch.
         </p>
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
+          className={`rounded-xl border p-4 ${dark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white shadow-sm"}`}
         >
-          <p className="mb-3 text-sm text-zinc-700">
+          <p className={`mb-3 text-sm ${dark ? "text-zinc-400" : "text-zinc-700"}`}>
             Have a question? Send Kenny a note.
           </p>
-          {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+          {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
           <div className="space-y-3">
             <input
               type="text"
@@ -89,7 +95,7 @@ export default function ProjectMessages({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+              className={inputClass}
             />
             <textarea
               placeholder="Your message"
@@ -97,12 +103,16 @@ export default function ProjectMessages({
               onChange={(e) => setText(e.target.value)}
               required
               rows={3}
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+              className={inputClass}
             />
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-900 px-5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+              className={`inline-flex h-10 items-center justify-center rounded-lg px-5 text-sm font-medium transition disabled:opacity-50 ${
+                dark
+                  ? "border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"
+                  : "bg-zinc-900 text-white hover:bg-zinc-700"
+              }`}
             >
               {isPending ? "Sending..." : "Send message"}
             </button>
