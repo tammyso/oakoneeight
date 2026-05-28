@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 };
 
 const BIO_PARAGRAPHS = [
-  "I'm Kenny, a New York filmmaker. I shoot weddings, engagements, milestone events, brand work, and music videos. Videography is my primary focus. When photography is part of the picture, it's built around the film.",
-  "Weddings don't unfold in predictable blocks of time. They move. They breathe. They shift emotionally. My work is built around capturing the day as a complete story. Not staged moments or rushed timelines. Just intentional storytelling.",
-  "I work with a small number of clients at a time so every project gets real attention. If the work resonates with you, I'd love to hear about your day.",
+  "I'm Kenny, a New York filmmaker operating as Oak One Eight Visualz. I shoot weddings, engagements, birthdays, prom reels, brand work, and music videos. Videography is the foundation. When photography is added, it is built around the film.",
+  "A lot of the work starts personal. My niece asked if I could film her prom send-off. A friend's kid turning one. A couple days away from the I Do's. These are the milestones that do not come back around, and that is exactly why I take them seriously.",
+  "Weddings do not unfold in predictable blocks of time. They move. They breathe. They shift emotionally. My work is built around capturing the day as a complete story. Not staged moments or rushed timelines. Just intentional storytelling.",
 ];
 
 const SHOOTS = [
