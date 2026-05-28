@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Portfolio video files — too large for Vercel deployment (870 MB+).
+# In production, upload to Supabase Storage and update videoPath in lib/portfolio.ts.
+/public/portfolio/*.m4v
+/public/portfolio/*.mp4
+/public/portfolio/*.mov

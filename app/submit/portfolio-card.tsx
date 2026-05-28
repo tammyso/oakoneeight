@@ -4,18 +4,21 @@ import { useState } from "react";
 import type { PortfolioItem } from "@/lib/portfolio";
 import { getVideoEmbedUrl } from "@/lib/video-embed";
 
-// Click-to-load embed: shows the static poster until tapped, then swaps in
-// the iframe. Avoids loading 6 iframes upfront — the /submit page is the
-// public face and needs to be fast.
+// Click-to-load: shows poster (or dark placeholder) until tapped, then plays.
+// Supports three modes:
+//   videoUrl  → iframe embed (YouTube / Vimeo)
+//   videoPath → HTML5 <video> (local file or Supabase Storage URL)
+//   neither   → static poster only
 export default function PortfolioCard({ item }: { item: PortfolioItem }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const embedUrl = item.videoUrl ? getVideoEmbedUrl(item.videoUrl) : null;
-  const isPlayable = embedUrl !== null;
+  const isPlayable = embedUrl !== null || !!item.videoPath;
 
   return (
     <figure className="group overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition hover:border-zinc-700">
       <div className="relative aspect-video overflow-hidden bg-zinc-800">
         {isPlaying && embedUrl ? (
+          // YouTube / Vimeo iframe
           <iframe
             src={`${embedUrl}?autoplay=1`}
             title={item.title}
@@ -23,14 +26,32 @@ export default function PortfolioCard({ item }: { item: PortfolioItem }) {
             allowFullScreen
             className="absolute inset-0 h-full w-full"
           />
+        ) : isPlaying && item.videoPath ? (
+          // Direct video file
+          <video
+            src={item.videoPath}
+            autoPlay
+            controls
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          />
         ) : (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={item.posterUrl}
-              alt={item.title}
-              className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-            />
+            {item.posterUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.posterUrl}
+                alt={item.title}
+                className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+              />
+            ) : (
+              // No poster — dark background with title initial
+              <div className="flex h-full w-full items-center justify-center bg-zinc-800 transition group-hover:bg-zinc-700">
+                <span className="text-4xl font-semibold text-zinc-600">
+                  {item.title.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             {isPlayable && (
               <button
                 type="button"
