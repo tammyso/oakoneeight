@@ -6,7 +6,7 @@ export type SocialKind = "instagram" | "vimeo" | "youtube" | "tiktok";
 export const KENNY_PROFILE = {
   businessName: "Oak One Eight Visualz",
   city: "New York",
-  email: "hello@kenny.com", // change to Kenny's actual email
+  email: "Oakoneeight@gmail.com",
   socials: [
     {
       kind: "instagram" as SocialKind,
