@@ -89,6 +89,27 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    href: "/calendar",
+    label: "Calendar",
+    icon: (
+      <svg
+        className={iconClass}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
     href: "/edit-plan",
     label: "Template Planner",
     icon: (
@@ -111,27 +132,6 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const EXTERNAL_LINKS: ExternalLink[] = [
-  {
-    href: "https://calendar.google.com",
-    label: "Google Calendar",
-    icon: (
-      <svg
-        className={iconClass}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    ),
-  },
   {
     href: "https://dashboard.stripe.com",
     label: "Stripe Payments",
@@ -253,26 +253,6 @@ export default function AppShell({
             <path d="M7 7h10v10" />
           </svg>
         </a>
-        {calendarConnected ? (
-          <div className="rounded-md bg-emerald-50 px-3 py-2 text-xs">
-            <p className="font-medium text-emerald-800">Calendar connected</p>
-            <form action={disconnectCalendar} className="mt-1">
-              <button
-                type="submit"
-                className="text-emerald-700 underline-offset-2 hover:underline"
-              >
-                Disconnect
-              </button>
-            </form>
-          </div>
-        ) : (
-          <a
-            href="/api/google/connect"
-            className="block rounded-md border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
-          >
-            Connect Google Calendar
-          </a>
-        )}
         <SignOutButton />
       </div>
     </>
