@@ -8,24 +8,22 @@ export const metadata: Metadata = {
   description: "About Kenny — videographer based in New York.",
 };
 
-// Placeholder bio. Tammy: replace this once Kenny shares his real bio /
-// about-me text. Keep it conversational.
 const BIO_PARAGRAPHS = [
-  "I'm Kenny — a videographer based in New York. I shoot brand films, weddings, music videos, and events for clients I'd love to work with again.",
-  "What I care about: story over polish. Some of my favorite work is the unguarded moment — a couple actually laughing, a band actually playing, a brand actually in motion. Polish gets noticed; story gets remembered.",
-  "I work with a small roster of clients on retainers and one-offs. If your project feels like a fit, I'd rather take fewer jobs and pour more into each than spread thin.",
+  "I'm Kenny, a New York wedding filmmaker and videographer. I specialize in cinematic wedding videography, focusing on authentic moments, natural pacing, and storytelling that feels timeless rather than trendy.",
+  "Weddings don't unfold in predictable blocks of time. They move. They breathe. They shift emotionally. My work is built around capturing the day as a complete story. Every collection is structured to preserve natural pacing, authentic reactions, and the atmosphere that makes your wedding feel uniquely yours.",
+  "I believe clarity before the wedding day creates freedom during it. Professional planning, clear coverage boundaries, and consistent delivery timelines mean you can be present on the day instead of managing logistics.",
 ];
 
 const SHOOTS = [
   {
-    label: "Brand films",
+    label: "Wedding films",
     blurb:
-      "Recurring social cuts, hero campaigns, founder stories. Built for brands that want video as part of their voice, not a one-time launch.",
+      "Cinematic coverage structured around complete story arcs. Three collections available: Essential, Signature, and Legacy. Focused ceremony or reception coverage also available.",
   },
   {
-    label: "Weddings",
+    label: "Brand work",
     blurb:
-      "Documentary-leaning wedding films. Coverage that pays attention to the day instead of staging it.",
+      "Recurring social cuts, hero campaigns, founder stories. Built for brands that want video as a consistent part of their voice, not a one-time launch.",
   },
   {
     label: "Music videos",
@@ -35,7 +33,7 @@ const SHOOTS = [
   {
     label: "Events",
     blurb:
-      "Conferences, launches, brand activations. Recap reels and selects in fast turnaround.",
+      "Milestone celebrations, conferences, brand activations. Cinematic recap reels that capture the energy and atmosphere of the day.",
   },
 ];
 
@@ -89,7 +87,7 @@ export default function AboutPage() {
           </div>
 
           <footer className="mt-16 text-center text-xs text-zinc-500">
-            Based in {KENNY_PROFILE.city} · &copy; {new Date().getFullYear()} Kenny
+            Based in {KENNY_PROFILE.city} · &copy; {new Date().getFullYear()} {KENNY_PROFILE.businessName}
           </footer>
         </div>
       </main>

@@ -4,7 +4,8 @@
 export type SocialKind = "instagram" | "vimeo" | "youtube" | "tiktok";
 
 export const KENNY_PROFILE = {
-  city: "New York", // change to Kenny's actual city
+  businessName: "Oak One Eight Visualz",
+  city: "New York",
   email: "hello@kenny.com", // change to Kenny's actual email
   socials: [
     {
