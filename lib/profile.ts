@@ -11,7 +11,7 @@ export const KENNY_PROFILE = {
     {
       kind: "instagram" as SocialKind,
       label: "Instagram",
-      href: "https://instagram.com/kenny.video",
+      href: "https://www.instagram.com/oak18_visualz/",
     },
     {
       kind: "vimeo" as SocialKind,

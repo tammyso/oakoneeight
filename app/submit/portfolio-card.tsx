@@ -114,11 +114,6 @@ export default function PortfolioCard({ item }: { item: PortfolioItem }) {
         )}
       </div>
 
-      {/* Caption */}
-      <figcaption className="px-3 py-3">
-        <p className="text-base font-medium text-zinc-100">{item.title}</p>
-        <p className="text-sm text-zinc-500">{item.subtitle}</p>
-      </figcaption>
     </figure>
   );
 }

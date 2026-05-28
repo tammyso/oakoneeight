@@ -179,8 +179,8 @@ export default function SubmitInquiryPage() {
         <div className="mb-14 max-w-2xl">
           <p className="mt-2 text-lg text-zinc-300">
             Cinematic wedding films, brand work, music videos, and events.
-            Every film is crafted with intention — not staged or rushed — so the
-            story of your day feels timeless rather than trendy.
+            Every film is crafted with intention. Not staged or rushed. The
+            story of your day, told exactly as it felt.
           </p>
         </div>
 
