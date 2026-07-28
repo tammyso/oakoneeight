@@ -111,25 +111,25 @@ export async function submitInquiry(
     }
   }
 
-  const { data: inserted, error } = await supabase
-    .from("inquiries")
-    .insert({
-      client_name: clientName,
-      client_email: clientEmail,
-      project_type: projectType,
-      event_date: eventDate,
-      budget_range: budgetRange,
-      message,
-      client_references: references,
-    })
-    .select("id")
-    .single();
+  // Generate the id ourselves and skip .select() on the insert — anon has no
+  // SELECT policy on inquiries (by design, so the public can't read other
+  // clients' info), and requesting a row back after insert requires one.
+  const inquiryId = crypto.randomUUID();
 
-  if (error || !inserted) {
+  const { error } = await supabase.from("inquiries").insert({
+    id: inquiryId,
+    client_name: clientName,
+    client_email: clientEmail,
+    project_type: projectType,
+    event_date: eventDate,
+    budget_range: budgetRange,
+    message,
+    client_references: references,
+  });
+
+  if (error) {
     return { ok: false, error: "Couldn't submit. Please try again." };
   }
-
-  const inquiryId = inserted.id as string;
   const inquirySummary = {
     clientName,
     clientEmail,
