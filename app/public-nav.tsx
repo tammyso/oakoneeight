@@ -33,7 +33,7 @@ export default function PublicNav() {
           >
             Kenny
           </p>
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 sm:text-sm sm:tracking-wider">
+          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-zinc-500 sm:text-sm sm:tracking-wider">
             Your Personal Cinematographer
           </p>
         </div>
