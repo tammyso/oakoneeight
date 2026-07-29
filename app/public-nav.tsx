@@ -24,11 +24,11 @@ export default function PublicNav() {
           alt="Oak One Eight Visualz"
           width={200}
           height={200}
-          className="opacity-90 hover:opacity-100"
+          className="h-24 w-24 opacity-90 hover:opacity-100 sm:h-[200px] sm:w-[200px]"
         />
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-zinc-500">
-            Videographer
+        <div className="max-w-[13rem] sm:max-w-none">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 sm:text-sm sm:tracking-wider">
+            Your Personal Cinematographer
           </p>
           <p
             className="text-5xl font-normal italic text-zinc-50"
