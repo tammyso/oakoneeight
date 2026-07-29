@@ -51,6 +51,6 @@ export async function saveQuestionnaire(
   }
 
   revalidatePath(`/project/${inquiryId}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   return { ok: true };
 }

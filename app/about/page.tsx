@@ -79,7 +79,7 @@ export default function AboutPage() {
               Got a project in mind? I&apos;d love to hear about it.
             </p>
             <Link
-              href="/submit"
+              href="/"
               className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 px-5 text-sm font-medium text-zinc-900 transition hover:bg-white"
             >
               Send me an inquiry

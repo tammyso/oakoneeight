@@ -1,340 +1,388 @@
-import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
-import {
-  getDayEvents,
-  isCalendarConnected,
-  type DayEvent,
-} from "@/lib/google";
-import AppShell from "./app-shell";
-import InquiryRow, { type InquiryRowData } from "./inquiry-row";
-import DashboardBoard from "./dashboard-board";
-import DashboardStatsPanel from "./dashboard-stats";
-import DashboardToolbar from "./dashboard-toolbar";
-import { computeDashboardStats, type InvoiceStatRow } from "@/lib/stats";
+"use client";
 
-const calendarBannerCopy = (status: string | undefined, message: string | undefined) => {
-  switch (status) {
-    case "connected":
-      return { tone: "success" as const, text: "Google Calendar connected." };
-    case "error":
-      return {
-        tone: "error" as const,
-        text: `Google denied the connection${message ? `: ${message}` : "."}`,
-      };
-    case "missing_code":
-      return {
-        tone: "error" as const,
-        text: "Google didn't return an authorization code. Try again.",
-      };
-    case "no_refresh_token":
-      return {
-        tone: "error" as const,
-        text:
-          "Google didn't return a refresh token. Disconnect on your Google account's app permissions page, then try again.",
-      };
-    case "exchange_failed":
-      return {
-        tone: "error" as const,
-        text: `Couldn't exchange the authorization code${message ? `: ${message}` : "."}`,
-      };
-    default:
-      return null;
-  }
+import { useRef, useState, useTransition } from "react";
+import { submitInquiry } from "./actions";
+import { PORTFOLIO_ITEMS } from "@/lib/portfolio";
+import { KENNY_PROFILE } from "@/lib/profile";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import PortfolioCard from "./portfolio-card";
+import PublicNav from "./public-nav";
+
+type LocalReference = {
+  file: File;
+  previewUrl: string;
+  uploadedUrl?: string;
+  mediaType?: string;
 };
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    calendar?: string;
-    message?: string;
-    archived?: string;
-    view?: string;
-    q?: string;
-    filter?: string;
-    snoozed?: string;
-    completed?: string;
-  }>;
-}) {
-  const supabase = await createSupabaseServerClient();
+const MAX_REFERENCES = 5;
+const MAX_REF_DIM = 1600;
+const REF_QUALITY = 0.85;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const REFERENCE_BUCKET = "inquiry-references";
 
-  if (!user) {
-    redirect("/login");
-  }
+const loadImage = (file: File): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
+    img.src = url;
+  });
 
-  const params = await searchParams;
-  const banner = calendarBannerCopy(params.calendar, params.message);
-  const calendarConnected = await isCalendarConnected();
-  const showingArchived = params.archived === "1";
-  const showingSnoozed = params.snoozed === "1";
-  const showingCompleted = params.completed === "1";
-  const isBoardView = params.view === "board";
-  const searchQ = (params.q ?? "").trim();
-  const activeFilter = params.filter ?? null;
+const resizeToBlob = async (file: File): Promise<Blob> => {
+  const img = await loadImage(file);
+  const ratio = Math.min(MAX_REF_DIM / img.width, MAX_REF_DIM / img.height, 1);
+  const w = Math.max(1, Math.round(img.width * ratio));
+  const h = Math.max(1, Math.round(img.height * ratio));
 
-  let query = supabase
-    .from("inquiries")
-    .select(
-      "id, created_at, client_name, client_email, project_type, event_date, budget_range, message, status, draft_reply, draft_status, draft_generated_at, sent_at, calendar_event_id, calendar_event_link, stripe_invoice_id, stripe_hosted_url, invoice_amount_cents, invoice_status, archived_at, internal_notes, triage_tag, triage_reason, client_research, client_references, booked_at, invoice_sent_at, delivered_at, review_requested_at, pre_shoot_responses, pre_shoot_completed_at, deliverable_url, snoozed_until, edit_plan, edit_plan_generated_at, completed_at",
-    )
-    .order("created_at", { ascending: false });
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Couldn't create canvas context");
+  ctx.drawImage(img, 0, 0, w, h);
 
-  if (showingArchived) {
-    query = query.not("archived_at", "is", null);
-  } else if (showingCompleted) {
-    query = query.is("archived_at", null).not("completed_at", "is", null);
-  } else {
-    query = query.is("archived_at", null).is("completed_at", null);
-  }
-
-  // Snoozed inquiries are hidden from default active view until their date
-  // arrives, but a "Snoozed" view (?snoozed=1) shows them explicitly.
-  const nowIso = new Date().toISOString();
-  if (!showingArchived && !showingCompleted) {
-    query = showingSnoozed
-      ? query.gt("snoozed_until", nowIso)
-      : query.or(`snoozed_until.is.null,snoozed_until.lte.${nowIso}`);
-  }
-
-  if (searchQ) {
-    query = query.or(
-      `client_name.ilike.%${searchQ}%,client_email.ilike.%${searchQ}%,project_type.ilike.%${searchQ}%`,
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Couldn't encode image"))),
+      "image/jpeg",
+      REF_QUALITY,
     );
-  }
+  });
+};
 
-  if (activeFilter === "flagged") {
-    query = query.eq("triage_tag", "flagged");
-  } else if (activeFilter === "paid") {
-    query = query.eq("invoice_status", "paid");
-  } else if (activeFilter === "unpaid") {
-    query = query.eq("invoice_status", "open");
-  }
+const PROJECT_TYPES = ["Wedding", "Brand", "Event", "Music Video", "Other"];
+const BUDGET_RANGES = [
+  "Under $1k",
+  "$1k to $3k",
+  "$3k to $7k",
+  "$7k+",
+  "Not sure",
+];
 
-  const { data, error } = await query;
+export default function SubmitInquiryPage() {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [didSubmit, setDidSubmit] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [references, setReferences] = useState<LocalReference[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const inquiries: InquiryRowData[] = data ?? [];
-
-  // Stats reflect every inquiry + invoice (including archived).
-  const [
-    { data: allInquiriesForStats },
-    { data: allInvoicesForStats },
-    { data: linkedInvoicesRaw },
-    { data: allProjectMessages },
-  ] = await Promise.all([
-    supabase
-      .from("inquiries")
-      .select("id, created_at, project_type, invoice_amount_cents, invoice_status, invoice_sent_at"),
-    supabase
-      .from("invoices")
-      .select("total, status, sent_at"),
-    supabase
-      .from("invoices")
-      .select("id, inquiry_id, total, status")
-      .not("inquiry_id", "is", null),
-    supabase
-      .from("project_messages")
-      .select("inquiry_id"),
-  ]);
-
-  // Map inquiry_id -> most-recently-created linked invoice (first insert wins since
-  // we don't order here, but duplicates are prevented by the UI fix below).
-  const linkedInvoiceByInquiryId = new Map<string, { id: string; total: number; status: string }>();
-  for (const inv of linkedInvoicesRaw ?? []) {
-    if (inv.inquiry_id && !linkedInvoiceByInquiryId.has(inv.inquiry_id)) {
-      linkedInvoiceByInquiryId.set(inv.inquiry_id, { id: inv.id, total: inv.total, status: inv.status });
+  const handleReferenceFiles = (files: FileList | null) => {
+    if (!files) return;
+    setErrorMessage("");
+    const accepted: LocalReference[] = [];
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      accepted.push({ file, previewUrl: URL.createObjectURL(file) });
     }
-  }
+    setReferences((prev) => [...prev, ...accepted].slice(0, MAX_REFERENCES));
+  };
 
-  const messageCountByInquiryId = new Map<string, number>();
-  for (const msg of allProjectMessages ?? []) {
-    if (msg.inquiry_id) {
-      messageCountByInquiryId.set(msg.inquiry_id, (messageCountByInquiryId.get(msg.inquiry_id) ?? 0) + 1);
+  const removeReference = (idx: number) => {
+    setReferences((prev) => {
+      const target = prev[idx];
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const uploadReferences = async (): Promise<
+    { url: string; mediaType: string }[]
+  > => {
+    if (references.length === 0) return [];
+    const supabase = createSupabaseBrowserClient();
+    const uploaded: { url: string; mediaType: string }[] = [];
+    for (const [i, ref] of references.entries()) {
+      const blob = await resizeToBlob(ref.file);
+      const path = `${Date.now()}-${i}.jpg`;
+      const { data, error } = await supabase.storage
+        .from(REFERENCE_BUCKET)
+        .upload(path, blob, { contentType: "image/jpeg", upsert: false });
+      if (error || !data) {
+        throw new Error(`Couldn't upload reference: ${error?.message}`);
+      }
+      const { data: urlData } = supabase.storage
+        .from(REFERENCE_BUCKET)
+        .getPublicUrl(data.path);
+      uploaded.push({ url: urlData.publicUrl, mediaType: "image/jpeg" });
     }
-  }
-  const stats = computeDashboardStats(
-    (allInquiriesForStats ?? []) as InquiryRowData[],
-    (allInvoicesForStats ?? []) as InvoiceStatRow[],
-  );
+    return uploaded;
+  };
 
-  const eventsByDate = new Map<string, DayEvent[] | null>();
-  if (calendarConnected) {
-    const uniqueDates = Array.from(
-      new Set(
-        inquiries
-          .map((i) => i.event_date)
-          .filter((d): d is string => !!d),
-      ),
+  const handleSubmit = (formData: FormData) => {
+    setErrorMessage("");
+    startTransition(async () => {
+      try {
+        setIsUploading(true);
+        const uploaded = await uploadReferences();
+        setIsUploading(false);
+        if (uploaded.length > 0) {
+          formData.set("client_references", JSON.stringify(uploaded));
+        }
+        const result = await submitInquiry(formData);
+        if (!result.ok) {
+          setErrorMessage(result.error);
+          return;
+        }
+        setDidSubmit(true);
+        formRef.current?.reset();
+        references.forEach((r) => URL.revokeObjectURL(r.previewUrl));
+        setReferences([]);
+      } catch (err) {
+        setErrorMessage(
+          err instanceof Error ? err.message : "Something went wrong",
+        );
+      } finally {
+        setIsUploading(false);
+      }
+    });
+  };
+
+  if (didSubmit) {
+    return (
+      <div className="min-h-screen bg-zinc-950">
+        <main className="mx-auto w-full max-w-2xl px-6 py-16">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-sm">
+            <h1 className="text-2xl font-semibold text-zinc-50">
+              Thanks for reaching out
+            </h1>
+            <p className="mt-3 text-sm text-zinc-300">
+              Your inquiry is in. Kenny will follow up as soon as possible —
+              keep an eye on your inbox.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDidSubmit(false)}
+              className="mt-6 inline-flex h-10 items-center rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-sm font-medium text-zinc-200 transition hover:bg-zinc-800"
+            >
+              Submit another inquiry
+            </button>
+          </div>
+        </main>
+      </div>
     );
-    const results = await Promise.all(
-      uniqueDates.map(
-        async (date) => [date, await getDayEvents(date)] as const,
-      ),
-    );
-    for (const [date, events] of results) {
-      eventsByDate.set(date, events);
-    }
   }
 
   return (
-    <AppShell calendarConnected={calendarConnected}>
-    <div className="mx-auto w-full max-w-7xl px-6 py-10">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-zinc-900">Inquiries</h1>
-          <p className="mt-2 text-sm text-zinc-600">
-            {error
-              ? "There was a problem loading inquiries."
-              : showingArchived
-                ? `Showing ${inquiries.length} archived ${inquiries.length === 1 ? "inquiry" : "inquiries"}.`
-                : showingCompleted
-                  ? `Showing ${inquiries.length} completed ${inquiries.length === 1 ? "project" : "projects"}.`
-                  : showingSnoozed
-                    ? `Showing ${inquiries.length} snoozed ${inquiries.length === 1 ? "inquiry" : "inquiries"}.`
-                    : `Showing ${inquiries.length} active ${inquiries.length === 1 ? "inquiry" : "inquiries"}.`}
+    <div className="min-h-screen bg-zinc-950">
+      <main className="mx-auto w-full max-w-5xl px-6 py-16">
+        <PublicNav />
+
+        <div className="mb-14 max-w-2xl">
+          <p className="mt-2 text-lg text-zinc-300">
+            Cinematic wedding films, brand work, music videos, and events.
+            Every film is crafted with intention. Not staged or rushed. The
+            story of your day, told exactly as it felt.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex h-10 items-center rounded-lg border border-zinc-300 bg-white p-0.5 text-sm font-medium">
-            <a
-              href={showingArchived ? "/?archived=1" : "/"}
-              className={`inline-flex h-full items-center rounded-md px-3 transition ${
-                !isBoardView
-                  ? "bg-zinc-900 text-white"
-                  : "text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              List
-            </a>
-            <a
-              href={
-                showingArchived ? "/?archived=1&view=board" : "/?view=board"
-              }
-              className={`inline-flex h-full items-center rounded-md px-3 transition ${
-                isBoardView
-                  ? "bg-zinc-900 text-white"
-                  : "text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              Board
-            </a>
-          </div>
-          <div className="inline-flex h-10 items-center rounded-lg border border-zinc-300 bg-white p-0.5 text-sm font-medium">
-            {[
-              { label: "Active", href: isBoardView ? "/?view=board" : "/", isActive: !showingArchived && !showingSnoozed && !showingCompleted },
-              { label: "Snoozed", href: isBoardView ? "/?snoozed=1&view=board" : "/?snoozed=1", isActive: showingSnoozed },
-              { label: "Completed", href: isBoardView ? "/?completed=1&view=board" : "/?completed=1", isActive: showingCompleted },
-              { label: "Archived", href: isBoardView ? "/?archived=1&view=board" : "/?archived=1", isActive: showingArchived },
-            ].map((view) => (
-              <a
-                key={view.label}
-                href={view.href}
-                className={`inline-flex h-full items-center rounded-md px-3 transition ${
-                  view.isActive
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-700 hover:bg-zinc-50"
-                }`}
-              >
-                {view.label}
-              </a>
+
+        <div className="mb-14">
+          <p className="mb-4 text-xs font-medium uppercase tracking-wider text-zinc-500">
+            Selected work
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {PORTFOLIO_ITEMS.map((item) => (
+              <PortfolioCard key={item.id} item={item} />
             ))}
           </div>
-          <a
-            href="/submit"
-            className="inline-flex h-10 items-center rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition hover:bg-zinc-700"
-          >
-            New Inquiry
-          </a>
         </div>
-      </div>
 
-      {banner && (
-        <div
-          className={`mb-6 rounded-lg border px-4 py-3 text-sm ${
-            banner.tone === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
-        >
-          {banner.text}
-        </div>
-      )}
-
-      {!showingArchived && !showingSnoozed && !showingCompleted && (
-        <DashboardStatsPanel stats={stats} />
-      )}
-
-      {!isBoardView && <DashboardToolbar />}
-
-      {isBoardView ? (
-        <DashboardBoard inquiries={inquiries} />
-      ) : (
-      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
-            <thead className="bg-zinc-50">
-              <tr>
-                <th className="hidden px-4 py-3 font-semibold text-zinc-700 lg:table-cell">Date Submitted</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700">Name</th>
-                <th className="hidden px-4 py-3 font-semibold text-zinc-700 lg:table-cell">Email</th>
-                <th className="hidden px-4 py-3 font-semibold text-zinc-700 sm:table-cell">Project Type</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700">Event Date</th>
-                <th className="hidden px-4 py-3 font-semibold text-zinc-700 lg:table-cell">Budget</th>
-                <th className="hidden px-4 py-3 font-semibold text-zinc-700 xl:table-cell">Message</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700">Status</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700">Draft</th>
-                <th className="px-4 py-3 text-right font-semibold text-zinc-700">
-                  <span className="sr-only">Delete</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 bg-white">
-              {inquiries.length === 0 ? (
-                <tr>
-                  <td className="px-4 py-12 text-center text-sm text-zinc-500" colSpan={10}>
-                    {error ? (
-                      "Unable to load inquiries right now."
-                    ) : showingArchived ? (
-                      "No archived inquiries yet."
-                    ) : (
-                      <>
-                        No inquiries yet. Send a client to{" "}
-                        <a
-                          href="/submit"
-                          className="font-medium text-zinc-700 underline-offset-2 hover:underline"
-                        >
-                          /submit
-                        </a>{" "}
-                        — once they fill the form, the inquiry shows up here for
-                        you to triage.
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                inquiries.map((inquiry) => (
-                  <InquiryRow
-                    key={inquiry.id}
-                    inquiry={inquiry}
-                    events={
-                      inquiry.event_date
-                        ? eventsByDate.get(inquiry.event_date) ?? null
-                        : null
-                    }
-                    linkedInvoice={linkedInvoiceByInquiryId.get(inquiry.id) ?? null}
-                    messageCount={messageCountByInquiryId.get(inquiry.id) ?? 0}
+        <div className="mx-auto max-w-2xl">
+          <div className="mb-6">
+            <p className="text-sm font-medium uppercase tracking-wider text-zinc-500">
+              Get in touch
+            </p>
+            <p className="mt-3 text-lg text-zinc-300">
+              Have a project in mind? Share a few details and I&apos;ll be in
+              touch as soon as possible.
+            </p>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 shadow-sm">
+            <form ref={formRef} action={handleSubmit} className="space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="client_name"
+                    className="text-sm font-medium text-zinc-200"
+                  >
+                    Your name *
+                  </label>
+                  <input
+                    id="client_name"
+                    name="client_name"
+                    type="text"
+                    required
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-100/20 transition placeholder:text-zinc-500 focus:ring-2"
                   />
-                ))
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="client_email"
+                    className="text-sm font-medium text-zinc-200"
+                  >
+                    Email *
+                  </label>
+                  <input
+                    id="client_email"
+                    name="client_email"
+                    type="email"
+                    required
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-100/20 transition placeholder:text-zinc-500 focus:ring-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="project_type"
+                    className="text-sm font-medium text-zinc-200"
+                  >
+                    Project type
+                  </label>
+                  <select
+                    id="project_type"
+                    name="project_type"
+                    defaultValue=""
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-100/20 transition focus:ring-2"
+                  >
+                    <option value="">Select a project type</option>
+                    {PROJECT_TYPES.map((projectType) => (
+                      <option key={projectType} value={projectType}>
+                        {projectType}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="event_date"
+                    className="text-sm font-medium text-zinc-200"
+                  >
+                    Event date
+                  </label>
+                  <input
+                    id="event_date"
+                    name="event_date"
+                    type="date"
+                    style={{ colorScheme: "dark" }}
+                    className="dark-input w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-100/20 transition focus:ring-2"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="budget_range"
+                  className="text-sm font-medium text-zinc-200"
+                >
+                  Budget range
+                </label>
+                <select
+                  id="budget_range"
+                  name="budget_range"
+                  defaultValue=""
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-100/20 transition focus:ring-2"
+                >
+                  <option value="">Select a budget range</option>
+                  {BUDGET_RANGES.map((budgetRange) => (
+                    <option key={budgetRange} value={budgetRange}>
+                      {budgetRange}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="message"
+                  className="text-sm font-medium text-zinc-200"
+                >
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  rows={5}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none ring-zinc-100/20 transition placeholder:text-zinc-500 focus:ring-2"
+                  placeholder="Optional details about your project — date flexibility, location, vibe, anything that helps."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-200">
+                  Reference images <span className="text-zinc-500">(optional)</span>
+                </label>
+                <p className="text-xs text-zinc-500">
+                  Pinterest pics, mood boards, screenshots — anything that
+                  shows the look you want. Up to {MAX_REFERENCES}.
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleReferenceFiles(e.target.files)}
+                  className="block w-full text-sm text-zinc-300 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-900 hover:file:bg-white"
+                />
+                {references.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {references.map((ref, i) => (
+                      <div key={ref.previewUrl} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={ref.previewUrl}
+                          alt={`Reference ${i + 1}`}
+                          className="aspect-square w-full rounded-md border border-zinc-800 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeReference(i)}
+                          className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-xs font-medium text-white hover:bg-black"
+                          aria-label={`Remove reference ${i + 1}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {errorMessage && (
+                <p className="rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-300">
+                  {errorMessage}
+                </p>
               )}
-            </tbody>
-          </table>
+
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 px-5 text-sm font-medium text-zinc-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isUploading
+                  ? "Uploading..."
+                  : isPending
+                    ? "Sending..."
+                    : "Send inquiry"}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
-      )}
+
+        <footer className="mt-16 text-center text-xs text-zinc-500">
+          Based in {KENNY_PROFILE.city} · &copy; {new Date().getFullYear()} Kenny
+        </footer>
+      </main>
     </div>
-    </AppShell>
   );
 }

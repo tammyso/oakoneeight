@@ -100,7 +100,7 @@ export default function FaqPage() {
               as soon as possible.
             </p>
             <Link
-              href="/submit"
+              href="/"
               className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 px-5 text-sm font-medium text-zinc-900 transition hover:bg-white"
             >
               Get in touch

@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     return NextResponse.redirect(
-      new URL(`/?calendar=error&message=${encodeURIComponent(error)}`, request.url),
+      new URL(`/dashboard?calendar=error&message=${encodeURIComponent(error)}`, request.url),
     );
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/?calendar=missing_code", request.url));
+    return NextResponse.redirect(new URL("/dashboard?calendar=missing_code", request.url));
   }
 
   const redirectUri = `${url.origin}/api/google/callback`;
@@ -32,16 +32,16 @@ export async function GET(request: NextRequest) {
     const { tokens } = await oauth.getToken(code);
     if (!tokens.refresh_token) {
       return NextResponse.redirect(
-        new URL("/?calendar=no_refresh_token", request.url),
+        new URL("/dashboard?calendar=no_refresh_token", request.url),
       );
     }
     await saveRefreshToken(tokens.refresh_token);
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown";
     return NextResponse.redirect(
-      new URL(`/?calendar=exchange_failed&message=${encodeURIComponent(message)}`, request.url),
+      new URL(`/dashboard?calendar=exchange_failed&message=${encodeURIComponent(message)}`, request.url),
     );
   }
 
-  return NextResponse.redirect(new URL("/?calendar=connected", request.url));
+  return NextResponse.redirect(new URL("/dashboard?calendar=connected", request.url));
 }

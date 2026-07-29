@@ -232,7 +232,7 @@ export async function submitInquiry(
     }
   });
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   return { ok: true };
 }
 
@@ -300,7 +300,7 @@ async function sendNewInquiryNotification(
       draft,
     );
   }
-  lines.push("", `Open the dashboard: ${getSiteUrl()}/?inquiry=${inquiryId}`);
+  lines.push("", `Open the dashboard: ${getSiteUrl()}/dashboard?inquiry=${inquiryId}`);
 
   const subjectPrefix = triageSubjectPrefix(triage?.tag);
   const draftSuffix = draft ? " — draft ready" : "";
@@ -321,7 +321,7 @@ export async function archiveInquiry(inquiryId: string) {
     .update({ archived_at: new Date().toISOString() })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to archive: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function unarchiveInquiry(inquiryId: string) {
@@ -331,7 +331,7 @@ export async function unarchiveInquiry(inquiryId: string) {
     .update({ archived_at: null })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to unarchive: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function snoozeInquiry(inquiryId: string, untilIso: string) {
@@ -344,7 +344,7 @@ export async function snoozeInquiry(inquiryId: string, untilIso: string) {
     .update({ snoozed_until: parsed.toISOString() })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to snooze: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function unsnoozeInquiry(inquiryId: string) {
@@ -354,7 +354,7 @@ export async function unsnoozeInquiry(inquiryId: string) {
     .update({ snoozed_until: null })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to unsnooze: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function bulkDeleteInquiries(inquiryIds: string[]) {
@@ -365,7 +365,7 @@ export async function bulkDeleteInquiries(inquiryIds: string[]) {
     .delete()
     .in("id", inquiryIds);
   if (error) throw new Error(`Failed to delete: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function deleteInquiry(inquiryId: string) {
@@ -375,7 +375,7 @@ export async function deleteInquiry(inquiryId: string) {
     .delete()
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to delete: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function markDelivered(inquiryId: string) {
@@ -385,7 +385,7 @@ export async function markDelivered(inquiryId: string) {
     .update({ delivered_at: new Date().toISOString() })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to mark delivered: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath(`/project/${inquiryId}`);
 }
 
@@ -404,7 +404,7 @@ export async function setDeliverableUrl(inquiryId: string, url: string) {
     .update({ deliverable_url: trimmed || null })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to save link: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath(`/project/${inquiryId}`);
 }
 
@@ -427,7 +427,7 @@ export async function deliverShoot(inquiryId: string, url: string) {
     })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to save: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath(`/project/${inquiryId}`);
 }
 
@@ -547,7 +547,7 @@ export async function sendReviewRequest(inquiryId: string) {
     );
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function updateInternalNotes(inquiryId: string, notes: string) {
@@ -557,7 +557,7 @@ export async function updateInternalNotes(inquiryId: string, notes: string) {
     .update({ internal_notes: notes.trim() || null })
     .eq("id", inquiryId);
   if (error) throw new Error(`Failed to save notes: ${error.message}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 type InquiryForPromptWithRefs = InquiryForPrompt & {
@@ -658,7 +658,7 @@ async function runDraftGeneration(args: {
 export async function generateDraft(inquiryId: string) {
   const supabase = await requireUser();
   await runDraftGeneration({ inquiryId, supabase });
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function saveDraft(inquiryId: string, draftReply: string) {
@@ -681,7 +681,7 @@ export async function saveDraft(inquiryId: string, draftReply: string) {
     throw new Error(`Failed to save draft: ${error.message}`);
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 type InquiryForSend = {
@@ -743,7 +743,7 @@ export async function sendDraft(inquiryId: string, draftReply: string) {
     throw new Error(`Email sent, but failed to record: ${updateError.message}`);
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 type InquiryForBooking = {
@@ -847,7 +847,7 @@ export async function bookShoot(inquiryId: string) {
     }
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 type InquiryForInvoice = {
@@ -908,7 +908,7 @@ export async function sendInvoice(args: {
     );
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function refreshInvoiceStatus(inquiryId: string) {
@@ -936,13 +936,13 @@ export async function refreshInvoiceStatus(inquiryId: string) {
     throw new Error(`Failed to update status: ${updateError.message}`);
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function disconnectCalendar() {
   await requireUser();
   await deleteRefreshToken();
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function trashDraft(inquiryId: string) {
@@ -961,7 +961,7 @@ export async function trashDraft(inquiryId: string) {
     throw new Error(`Failed to trash draft: ${error.message}`);
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function completeInquiry(inquiryId: string) {
@@ -970,7 +970,7 @@ export async function completeInquiry(inquiryId: string) {
     .from("inquiries")
     .update({ completed_at: new Date().toISOString() })
     .eq("id", inquiryId);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }
 
 export async function uncompleteInquiry(inquiryId: string) {
@@ -979,5 +979,5 @@ export async function uncompleteInquiry(inquiryId: string) {
     .from("inquiries")
     .update({ completed_at: null })
     .eq("id", inquiryId);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
 }

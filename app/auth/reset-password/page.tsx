@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
     }
 
     // Password updated — go straight to the dashboard.
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   };
 

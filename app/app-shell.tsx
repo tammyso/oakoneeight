@@ -23,7 +23,7 @@ const iconClass = "h-4 w-4 shrink-0";
 
 const NAV_ITEMS: NavItem[] = [
   {
-    href: "/",
+    href: "/dashboard",
     label: "Inquiries",
     matchExact: true,
     icon: (
@@ -253,7 +253,7 @@ export default function AppShell({
       </nav>
       <div className="space-y-2 border-t border-zinc-200 p-3">
         <a
-          href="/submit"
+          href="/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50"

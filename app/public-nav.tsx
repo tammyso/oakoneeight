@@ -7,7 +7,7 @@ import { KENNY_PROFILE } from "@/lib/profile";
 import { MailIcon, SocialIcon } from "./social-icon";
 
 const NAV_LINKS = [
-  { href: "/submit", label: "Home" },
+  { href: "/", label: "Home" },
   { href: "/packages", label: "Packages" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
@@ -18,7 +18,7 @@ export default function PublicNav() {
 
   return (
     <nav className="mb-12 flex items-center justify-between gap-5 text-sm">
-      <Link href="/submit" className="flex min-w-0 items-center gap-4" aria-label="Oak One Eight Visualz — home">
+      <Link href="/" className="flex min-w-0 items-center gap-4" aria-label="Oak One Eight Visualz — home">
         <Image
           src="/logo.png"
           alt="Oak One Eight Visualz"
