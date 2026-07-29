@@ -4,7 +4,9 @@
 This is a custom CRM and AI assistant built for Kenny, a videographer who does weddings, brand work, music videos, and events — and wants to land brand retainer clients. Built by Tammy (a recent grad, vibe coder) as a portfolio project and a real tool for Kenny.
 
 ## Deployment
-- **Live URL:** `https://oakoneeight.vercel.app`
+- **Live URL:** `https://oakoneeight.vercel.app` — this is the client-facing link to share (business card, Instagram, etc.). It loads the public homepage directly.
+- **Dashboard:** `https://oakoneeight.vercel.app/dashboard` — Kenny's authenticated inquiry dashboard, gated behind `/login`. (Used to live at the bare root; moved to `/dashboard` so the public URL doesn't show a login screen to potential clients.)
+- **Email-only domain:** `oakoneeightvisualz.com` — registered on Cloudflare, purely so Resend has a domain to send from (`kenny@oakoneeightvisualz.com`). Not connected to the Vercel app; visiting it directly won't load anything.
 - **GitHub repo:** `https://github.com/tammyso/oakoneeight`
 - **Git remote:** `git remote set-url origin https://github.com/tammyso/oakoneeight.git`
 - Vercel auto-deploys on every push to `main`
@@ -33,19 +35,19 @@ This is a custom CRM and AI assistant built for Kenny, a videographer who does w
 ## What's built (current state)
 
 ### Public site
-- `/submit` — inquiry form with priority triage labels, reference image uploads, muted autoplay portfolio reel cards, SEO metadata
+- `/` — inquiry form (formerly at `/submit`) with priority triage labels, reference image uploads, muted autoplay portfolio reel cards, SEO metadata. Moved to the bare root so the production URL itself works as a shareable client-facing link instead of redirecting to `/login`.
 - `/packages` — full pricing page with all event and wedding packages + add-ons
 - `/faq` — 13 questions covering booking, payment, refund policy, delivery, photography add-on
 - `/about` — bio page written in Kenny's real voice from his PDF notes and Instagram
-- `app/public-nav.tsx` — shared nav across all public pages; "Home" links to `/submit`
+- `app/public-nav.tsx` — shared nav across all public pages; "Home" links to `/`
 - `public/logo.png` — Kenny's logo extracted from PDFs, white PNG for dark backgrounds
-- Portfolio reels at `/submit`: 4 cards (engagement, pre-wedding, prom, birthday), videos hosted in Supabase Storage `portfolio` bucket as compressed MP4s. Birthday card uses `videoPaths[]` with prev/next arrows for 2 reels.
+- Portfolio reels at `/`: 4 cards (engagement, pre-wedding, prom, birthday), videos hosted in Supabase Storage `portfolio` bucket as compressed MP4s. Birthday card uses `videoPaths[]` with prev/next arrows for 2 reels.
 
 ### Auth + infrastructure
-- Supabase Auth: dashboard requires login at `/login`, public pages stay open
+- Supabase Auth: dashboard requires login at `/login`, redirects to `/dashboard` on success. Public pages (including the homepage) stay open, no auth required.
 - Password recovery flow: `/auth/callback` exchanges the recovery code, `/auth/reset-password` lets user set a new password. Login page has a "Forgot password?" button that sends a recovery email with the correct `redirectTo`.
 - Supabase Site URL: `https://oakoneeight.vercel.app` (no trailing slash, no wildcard). Redirect URLs allowlist: `https://oakoneeight.vercel.app/**`
-- `lib/email.ts` — `FROM_ADDRESS` constant, single env var (`RESEND_FROM`) controls sender. Falls back to `onboarding@resend.dev` if not set (no domain verified yet).
+- `lib/email.ts` — `FROM_ADDRESS` constant, single env var (`RESEND_FROM`) controls sender. Set to `Kenny <kenny@oakoneeightvisualz.com>` — domain verified in Resend via Cloudflare (MX + DKIM + SPF + DMARC records). Falls back to `onboarding@resend.dev` if unset, but that sandbox sender can only deliver to the Resend account owner's own email — real client/owner emails silently failed (403/422) until the domain was verified.
 - `lib/site-url.ts` — `getSiteUrl()` handles `NEXT_PUBLIC_SITE_URL`, `VERCEL_URL`, localhost fallback
 - `lib/profile.ts` — Kenny's real contact info: `businessName: "Oak One Eight Visualz"`, `email: "Oakoneeight@gmail.com"`, `city: "New York"`, Instagram `https://www.instagram.com/oak18_visualz/`. Vimeo URL is still placeholder.
 - `app/api/keep-alive/route.ts` — daily Supabase ping via Vercel cron (`0 12 * * *`) to prevent free tier pausing
@@ -115,20 +117,13 @@ Other emails: booking confirmation (with project room URL + questionnaire link),
 
 ## Pending / blocked
 
-### Must do before Kenny uses the dashboard
-- **SQL migrations** — run these in [Supabase SQL Editor](https://supabase.com/dashboard/project/hiirfnqszohdrjokyyyw/sql/new):
-```sql
-alter table public.inquiries
-  add column if not exists edit_plan text,
-  add column if not exists edit_plan_generated_at timestamptz,
-  add column if not exists completed_at timestamptz;
-```
+### Resolved (was blocking, confirmed fixed)
+- **SQL migrations** — confirmed applied; dashboard loads without error. Now tracked in `supabase/migrations/add_edit_plan_and_completed_at.sql` (previously only a manual TODO note here, never actually run through a migration file).
+- **Resend domain** — `oakoneeightvisualz.com` registered and verified in Resend (MX + DKIM + SPF + DMARC via Cloudflare). `RESEND_FROM` set in Vercel. Confirmed working end to end — client confirmation and owner notification emails both deliver now. Note: first deliveries landed in spam, expected for a brand-new sending domain with no reputation yet; should improve as more mail sends.
 
 ### Needs Kenny's decision
 - **Stripe account** — Kenny needs his own Stripe account. Current keys are Tammy's test keys; real client payments would go to the wrong place. Swap `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in Vercel once he sets up his account.
-- **Resend domain** — emails currently send from `onboarding@resend.dev`. To fix: Kenny buys a domain (e.g. `oakoneeight.com`, ~$12/year on Namecheap), verifies it in Resend, then set `RESEND_FROM=Kenny <kenny@oakoneeight.com>` in Vercel. Not a blocker — emails still deliver fine without it.
 - **Vimeo URL** — `lib/profile.ts` still has `https://vimeo.com/kenny` as placeholder. Update with real URL or remove the link.
-- **`STRIPE_WEBHOOK_SECRET`** — add `whsec_...` value to Vercel env vars so Stripe can auto-update invoice payment status.
 - **Adobe Sign** — invoice builder has a placeholder for e-signature. Kenny has Adobe CC (includes Adobe Sign). Needs client ID, secret, and refresh token from his Adobe account to wire it up.
 
 ### Not blocked, just not built yet
@@ -157,7 +152,7 @@ alter table public.inquiries
 - `SUPABASE_SERVICE_ROLE_KEY` — admin client for server actions
 - `ANTHROPIC_API_KEY` — Claude API
 - `RESEND_API_KEY` — email sending
-- `RESEND_FROM` — sender address, e.g. `Kenny <kenny@oakoneeight.com>` (falls back to `onboarding@resend.dev`)
+- `RESEND_FROM` — sender address, set to `Kenny <kenny@oakoneeightvisualz.com>` (falls back to `onboarding@resend.dev`, which can only deliver to the Resend account's own email — see gotchas)
 - `OWNER_NOTIFICATION_EMAIL` — set to `oakoneeight@gmail.com`
 - `STRIPE_SECRET_KEY` — Stripe API (currently Tammy's test key)
 - `STRIPE_WEBHOOK_SECRET` — webhook signature verification (`whsec_...`)
@@ -185,6 +180,9 @@ alter table public.inquiries
 - `sendInvoiceEmail` returns an error (does not send) if Stripe payment link creation fails — prevents clients receiving invoices with no way to pay.
 - Project room checks `inquiry.status === "booked"` only — completed projects keep the room accessible because `completed_at` is a separate column, not a status change.
 - Portfolio videos are stored in Supabase Storage `portfolio` bucket as compressed MP4s (HandBrake "Social" presets). File names with spaces must be URL-encoded in `lib/portfolio.ts` (e.g. `Saint%20Bday%20Reel.mp4`). Do not commit video files to git — they are in `.gitignore`.
+- **Anon inserts that `.select()` the row back will fail if `anon` has no SELECT policy on that table.** This broke public `/submit` entirely (RLS violation, 42501) even though the INSERT policy itself was correct — `anon` deliberately has no SELECT on `inquiries` so the public can't read other clients' data. Fix: generate the id client-side (`crypto.randomUUID()`) and skip `.select()` on the insert, rather than adding a broad SELECT policy. Any new public-facing insert action should follow this pattern — check for `.select()` chained onto an anon-role insert before assuming an RLS policy problem.
+- **Diagnose RLS issues with a raw SQL editor test, not the API.** `begin; set local role anon; insert into ... ; rollback;` (no `returning`) isolates whether it's a Postgres/policy problem vs. a PostgREST/API-gateway problem, and whether `RETURNING`/`.select()` specifically is the trigger — much faster than guessing from HTTP status codes alone.
+- **Resend's `onboarding@resend.dev` sandbox sender can only deliver to the Resend account's own registered email.** Sends to any other address (including your own business owner's email) get rejected outright — 403 "Testing domain restriction" or 422 "Invalid `to` field" — not silently dropped, but the app code catches and logs these to the server console only, so nothing surfaces to the user or owner. Check Resend's own Logs page (resend.com → Logs) for the real error; Vercel's Observability external-API call details are Pro-gated and may show placeholder demo data on the Hobby plan.
 
 ## Style preferences
 - Minimal but professional UI. No emoji in production code or copy.
