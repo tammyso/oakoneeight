@@ -76,7 +76,7 @@ export default function PortfolioCard({ item }: { item: PortfolioItem }) {
                   type="button"
                   onClick={prev}
                   aria-label="Previous video"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden>
                     <path d="M7 1 L3 5 L7 9" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -86,7 +86,7 @@ export default function PortfolioCard({ item }: { item: PortfolioItem }) {
                   type="button"
                   onClick={next}
                   aria-label="Next video"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden>
                     <path d="M3 1 L7 5 L3 9" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -112,7 +112,7 @@ export default function PortfolioCard({ item }: { item: PortfolioItem }) {
               type="button"
               onClick={() => setMuted((m) => !m)}
               aria-label={muted ? "Unmute" : "Mute"}
-              className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+              className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
             >
               {muted ? (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

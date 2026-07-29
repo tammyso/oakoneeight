@@ -364,17 +364,19 @@ export default function SubmitInquiryPage() {
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={isPending}
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 px-5 text-sm font-medium text-zinc-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isUploading
-                  ? "Uploading..."
-                  : isPending
-                    ? "Sending..."
-                    : "Send inquiry"}
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 px-5 text-sm font-medium text-zinc-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isUploading
+                    ? "Uploading..."
+                    : isPending
+                      ? "Sending..."
+                      : "Send inquiry"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
