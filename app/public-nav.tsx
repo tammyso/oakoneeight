@@ -17,7 +17,7 @@ export default function PublicNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="mb-12 flex items-center justify-between gap-5 text-sm">
+    <nav className="mb-12 flex flex-wrap items-center justify-between gap-x-5 gap-y-4 text-sm">
       <Link href="/" className="flex min-w-0 items-center gap-4" aria-label="Oak One Eight Visualz — home">
         <Image
           src="/logo.png"
