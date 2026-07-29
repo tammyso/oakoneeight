@@ -21,7 +21,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "Kenny — Your cinematic film awaits you",
+    default: "Kenny — Your personal cinematographer",
     template: "%s — Kenny",
   },
   description:
@@ -34,14 +34,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    title: "Kenny — Your cinematic film awaits you",
+    title: "Kenny — Your personal cinematographer",
     description:
       "Brand films, weddings, music videos, and events. Get in touch for one-offs or retainers.",
     siteName: "Kenny",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kenny — Your cinematic film awaits you",
+    title: "Kenny — Your personal cinematographer",
     description:
       "Brand films, weddings, music videos, and events. Get in touch for one-offs or retainers.",
   },
