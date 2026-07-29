@@ -117,6 +117,9 @@ Other emails: booking confirmation (with project room URL + questionnaire link),
 
 ## Pending / blocked
 
+### In progress — next session
+- **3 more portfolio videos** — 1 wedding, 2 birthday. Tammy has the files locally but hasn't compressed (HandBrake "Social" preset) or uploaded them to Supabase Storage's `portfolio` bucket yet. Once uploaded, add entries to `lib/portfolio.ts` (see the file's own header comment for the three ways to reference a video — `videoUrl`/`videoPath`/`videoPaths`). Still need to decide: do the 2 birthday videos extend the existing `bday` card's `videoPaths` array (currently 2 clips, prev/next arrows), or become a new separate card? Also need title/subtitle/category text for the new wedding entry. Ask Tammy before assuming.
+
 ### Resolved (was blocking, confirmed fixed)
 - **SQL migrations** — confirmed applied; dashboard loads without error. Now tracked in `supabase/migrations/add_edit_plan_and_completed_at.sql` (previously only a manual TODO note here, never actually run through a migration file).
 - **Resend domain** — `oakoneeightvisualz.com` registered and verified in Resend (MX + DKIM + SPF + DMARC via Cloudflare). `RESEND_FROM` set in Vercel. Confirmed working end to end — client confirmation and owner notification emails both deliver now. Note: first deliveries landed in spam, expected for a brand-new sending domain with no reputation yet; should improve as more mail sends.
